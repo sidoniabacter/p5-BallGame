@@ -11,11 +11,20 @@
     <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
     <script>
         const smilefaceHead = {
-            x: 400,
-            y: 400,
+            x: 300,
+            y: 415,
             size: 35,
             color: "yellow",
+            isMoving: false,
+            timeOutId: 0,
+            init: function () {
+                this.x = 300
+                this.y = 415
+                clearTimeout(this.timeOutId)
+            },
             draw: function () {
+                if (this.isMoving) this.x++
+
                 // HEAD
                 fill(this.color)
                 circle(this.x, this.y, this.size)
@@ -111,10 +120,14 @@
 
         function mousePressed() {
             startButton.checkIfClicked(() => {
-                console.log("START BUTTON CLICKED")
+               smilefaceHead.init()
+               smilefaceHead.isMoving = true   
+               smilefaceHead.timeOutId = setTimeout(() => {
+                smilefaceHead.isMoving = false
+               }, 4700)
             })
             stopButton.checkIfClicked(() => {
-                console.log("STOP BUTTON CLICKED")
+                smilefaceHead.isMoving = false
             })
         }
 
