@@ -15,16 +15,20 @@
             y: 415,
             size: 35,
             color: "yellow",
-            isMoving: false,
-            timeOutId: 0,
+            isMoving: true,
+            setIntervalId: 0,
+            speed: 15,
             init: function () {
                 this.x = 300
                 this.y = 415
-                clearTimeout(this.timeOutId)
+                this.setIntervalId = setInterval(() => {
+                    if (this.isMoving) { 
+                        this.x++
+                        this.y--
+                    }
+                }, this.speed)
             },
             draw: function () {
-                if (this.isMoving) this.x++
-
                 // HEAD
                 fill(this.color)
                 circle(this.x, this.y, this.size)
@@ -49,6 +53,35 @@
                 fill("red")
                 arc(this.x, this.y + this.size / 5, this.size / 2.5, this.size / 3.6, 0, PI)
                 fill(this.color)
+            }
+        }
+
+        const Brick = {
+            x: 0,
+            y: 0,
+            color: [0, 0, 0],
+            height: 0,
+            width: 0,
+            display: true,
+            init: function (x, y, color, height, width) {
+                this.x = x
+                this.y = y
+                this.color = color
+                this.height = height
+                this.width = width
+            },
+            draw: function () {
+                fill(this.color[0], this.color[1], this.color[2])
+                rect(this.x, this.y, this.width, this.height)
+            },
+            checkIfHit: function(ballX, ballY, ballRay) {
+                if (ballY - ballRay <= this.y + this.height && 
+                    ballY + ballRay >= this.y &&
+                    ballX + ballRay >= this.x &&
+                    ballX - ballRay <= this.x + this.width
+                ) {
+                    this.display = false
+                }
             }
         }
 
@@ -89,19 +122,21 @@
                 if ((mouseX >= this.x && mouseX <= this.x + this.width) &&
                     (mouseY >= this.y && mouseY <= this.y + this.height)
                 ) {
-                   callback()
+                    callback()
                 }
             },
         }
 
-        const startButton = Object.create(Button)
-        startButton.init(200, 400, 80, 30, "green", "START")
+        // const startButton = Object.create(Button)
+        // startButton.init(200, 400, 80, 30, "green", "START")
 
-        const stopButton = Object.create(Button)
-        stopButton.init(600, 400, 70, 30, "red", "STOP")
+        // const stopButton = Object.create(Button)
+        // stopButton.init(600, 400, 70, 30, "red", "STOP")
 
         function setup() {
             createCanvas(800, 800)
+
+            smilefaceHead.init()
 
             initBricks()
         }
@@ -114,21 +149,21 @@
 
             showHour()
 
-            startButton.draw()
-            stopButton.draw()
+            // startButton.draw()
+            // stopButton.draw()
         }
 
         function mousePressed() {
-            startButton.checkIfClicked(() => {
-               smilefaceHead.init()
-               smilefaceHead.isMoving = true   
-               smilefaceHead.timeOutId = setTimeout(() => {
-                smilefaceHead.isMoving = false
-               }, 4700)
-            })
-            stopButton.checkIfClicked(() => {
-                smilefaceHead.isMoving = false
-            })
+            // startButton.checkIfClicked(() => {
+            //    smilefaceHead.init()
+            //    smilefaceHead.isMoving = true   
+            //    smilefaceHead.timeOutId = setTimeout(() => {
+            //     smilefaceHead.isMoving = false
+            //    }, 4700)
+            // })
+            // stopButton.checkIfClicked(() => {
+            //     smilefaceHead.isMoving = false
+            // })
         }
 
         function initBricks() {
@@ -143,15 +178,15 @@
             for (let rowIndex = 0; rowIndex < numbersOfBricksByColumn; rowIndex++) {
                 bricks.push([])
                 for (let colIndex = 0; colIndex < numbersOfBricksByRow; colIndex++) {
-                    bricks[rowIndex].push({
-                        x: marignLR + colIndex * (brickWidth + paddingBetweenCols),
-                        y: marignTop + rowIndex * paddingBetweenRows,
-                        color: [Math.floor(Math.random() * 256),
+                    const brick = Object.create(Brick)
+                    brick.init(marignLR + colIndex * (brickWidth + paddingBetweenCols),
+                        marignTop + rowIndex * paddingBetweenRows,
+                        [Math.floor(Math.random() * 256),
                         Math.floor(Math.random() * 256),
                         Math.floor(Math.random() * 256)],
-                        height: 30,
-                        width: brickWidth
-                    })
+                        30,
+                        brickWidth)
+                    bricks[rowIndex].push(brick)
                 }
             }
             console.log("bricks", bricks)
@@ -160,8 +195,9 @@
         function showBricks() {
             bricks.forEach(bricksRow => {
                 bricksRow.forEach(brick => {
-                    fill(brick.color[0], brick.color[1], brick.color[2])
-                    rect(brick.x, brick.y, brick.width, brick.height)
+                    brick.checkIfHit(smilefaceHead.x, smilefaceHead.y, smilefaceHead.size / 2)
+                    if (brick.display)
+                        brick.draw()
                 })
             })
         }
