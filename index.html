@@ -10,21 +10,30 @@
 <body>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
     <script>
-        const smilefaceHead = {
+        const boardWidth = 800
+        const boardHeigth = 600
+
+        const SmilefaceHead = {
             x: 300,
             y: 415,
             size: 35,
             color: "yellow",
             isMoving: true,
             setIntervalId: 0,
-            speed: 15,
-            init: function () {
-                this.x = 300
-                this.y = 415
+            speed: 5,
+            sensX: 1,
+            sensY: -1,
+            init: function (x, y, speed = 5, size = 35, color = "yellow") {
+                this.x = x
+                this.y = y
+                this.speed = speed
+                this.size = size
+                this.color = color
                 this.setIntervalId = setInterval(() => {
                     if (this.isMoving) { 
-                        this.x++
-                        this.y--
+                        this.checkIfWallHit()
+                        this.x = this.x + this.sensX
+                        this.y = this.y + this.sensY 
                     }
                 }, this.speed)
             },
@@ -53,9 +62,14 @@
                 fill("red")
                 arc(this.x, this.y + this.size / 5, this.size / 2.5, this.size / 3.6, 0, PI)
                 fill(this.color)
+            },
+            checkIfWallHit: function() {
+                if (this.y - this.size / 2 <= 0 ) this.sensY = 1
+                if (this.y + this.size / 2 >= boardHeigth) this.sensY = -1
+                if (this.x - this.size / 2 <= 0) this.sensX = 1
+                if (this.x + this.size / 2 >= boardWidth) this.sensX = -1
             }
         }
-
         const Brick = {
             x: 0,
             y: 0,
@@ -81,13 +95,18 @@
                     ballX - ballRay <= this.x + this.width
                 ) {
                     this.display = false
+                    return true
                 }
+                return false
             }
         }
 
         let bricks = []
+        let balls = []
+
         const numbersOfBricksByRow = 5
         const numbersOfBricksByColumn = 3
+        const numberOfBalls = 1
 
         let time = new Date()
         setInterval(() => {
@@ -134,18 +153,17 @@
         // stopButton.init(600, 400, 70, 30, "red", "STOP")
 
         function setup() {
-            createCanvas(800, 800)
-
-            smilefaceHead.init()
+            createCanvas(boardWidth, boardHeigth)
 
             initBricks()
+            initBalls()
         }
 
         function draw() {
             background("white")
-            showBricks()
 
-            smilefaceHead.draw()
+            showBricks()
+            showBalls()
 
             showHour()
 
@@ -195,11 +213,35 @@
         function showBricks() {
             bricks.forEach(bricksRow => {
                 bricksRow.forEach(brick => {
-                    brick.checkIfHit(smilefaceHead.x, smilefaceHead.y, smilefaceHead.size / 2)
+                    balls.forEach(ball => {
+                        if (brick.checkIfHit(ball.x, ball.y, ball.size / 2)) {
+                            ball.speed = ball.speed - 10
+                        }
+                    })
                     if (brick.display)
                         brick.draw()
                 })
             })
+        }
+
+        function initBalls() {
+            for (let ballIndex = 0; ballIndex < numberOfBalls; ballIndex++) {
+                const ball = Object.create(SmilefaceHead)
+                ball.init(
+                    Math.floor(Math.random() * 350), 
+                    Math.floor(Math.random() * 400),
+                    20,
+                    Math.floor(Math.random() * 50),
+                )
+
+                balls.push(ball)
+            }
+        }
+
+        function showBalls() {
+            balls.forEach(ball => {
+                ball.draw()
+            });
         }
 
         function showHour() {
