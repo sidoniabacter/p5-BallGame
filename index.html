@@ -16,9 +16,13 @@
         let bricks = []
         let balls = []
 
+        let gamePromiseResolve = null
+        let gamePromiseReject = null
+        let gameOver = ""
+
         const numbersOfBricksByRow = 5
         const numbersOfBricksByColumn = 3
-        const numberOfBalls = 1
+        const numberOfBalls = 2
 
         const SmilefaceHead = {
             x: 300,
@@ -73,7 +77,11 @@
             },
             checkIfWallHit: function () {
                 if (this.y - this.size / 2 <= 0) this.sensY = 1
-                // if (this.y + this.size / 2 >= boardHeigth) this.sensY = -1
+                if (this.y + this.size / 2 >= boardHeigth) {
+                    this.isMoving = false
+                    if (!balls.some(ball => ball.isMoving))
+                        gamePromiseReject("You Lost!")
+                }
                 if (this.x - this.size / 2 <= 0) this.sensX = 1
                 if (this.x + this.size / 2 >= boardWidth) this.sensX = -1
             },
@@ -83,14 +91,14 @@
                     this.sensY = -1
                     return
                 }
-                if (this.x - this.size / 2 <= x + width && this.y >= y && this.y <= y + height) {
-                    this.sensX = 1
-                    return
-                }
-                if (this.x + this.size / 2 >= x && this.y >= y && this.y <= y + height) {
-                    this.sensX = -1
-                    return
-                }
+                // if (this.x - this.size / 2 <= x + width && this.y >= y && this.y <= y + height) {
+                //     this.sensX = 1
+                //     return
+                // }
+                // if (this.x + this.size / 2 >= x && this.y >= y && this.y <= y + height) {
+                //     this.sensX = -1
+                //     return
+                // }
             }
         }
         const Brick = {
@@ -112,7 +120,8 @@
                 rect(this.x, this.y, this.width, this.height)
             },
             checkIfHit: function (ballX, ballY, ballRay) {
-                if (ballY - ballRay <= this.y + this.height &&
+                if (this.display &&
+                    ballY - ballRay <= this.y + this.height &&
                     ballY + ballRay >= this.y &&
                     ballX + ballRay >= this.x &&
                     ballX - ballRay <= this.x + this.width
@@ -186,6 +195,20 @@
 
             initBricks()
             initBalls()
+
+            new Promise((resolve, reject) => {
+                gamePromiseResolve = resolve
+                gamePromiseReject = reject
+            })
+                .then((message) => {
+                    console.log(message)
+                    balls.forEach(ball => ball.isMoving = false)
+                    gameOver = message
+                })
+                .catch((message) => {
+                    gameOver = message
+                })
+
         }
 
         function draw() {
@@ -197,6 +220,13 @@
             Paddle.draw()
 
             showHour()
+
+            if (gameOver.length >= 0) {
+                fill("black")
+                textSize(40)
+                text(gameOver, 400, 400)
+                textSize(12)
+            }
 
             // startButton.draw()
             // stopButton.draw()
@@ -242,6 +272,7 @@
         }
 
         function showBricks() {
+            let allGone = true
             bricks.forEach(bricksRow => {
                 bricksRow.forEach(brick => {
                     balls.forEach(ball => {
@@ -249,10 +280,14 @@
                             ball.speed = ball.speed - 10
                         }
                     })
-                    if (brick.display)
+                    if (brick.display) {
+                        allGone = false
                         brick.draw()
+                    }
                 })
             })
+            console.log(allGone)
+            if (allGone) gamePromiseResolve("You Win!")
         }
 
         function initBalls() {
