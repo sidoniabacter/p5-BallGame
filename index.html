@@ -13,6 +13,13 @@
         const boardWidth = 800
         const boardHeigth = 600
 
+        let bricks = []
+        let balls = []
+
+        const numbersOfBricksByRow = 5
+        const numbersOfBricksByColumn = 3
+        const numberOfBalls = 1
+
         const SmilefaceHead = {
             x: 300,
             y: 415,
@@ -30,10 +37,11 @@
                 this.size = size
                 this.color = color
                 this.setIntervalId = setInterval(() => {
-                    if (this.isMoving) { 
+                    if (this.isMoving) {
                         this.checkIfWallHit()
+                        this.checkIfPaddleHit(Paddle.x, Paddle.y, Paddle.width, Paddle.height)
                         this.x = this.x + this.sensX
-                        this.y = this.y + this.sensY 
+                        this.y = this.y + this.sensY
                     }
                 }, this.speed)
             },
@@ -63,11 +71,26 @@
                 arc(this.x, this.y + this.size / 5, this.size / 2.5, this.size / 3.6, 0, PI)
                 fill(this.color)
             },
-            checkIfWallHit: function() {
-                if (this.y - this.size / 2 <= 0 ) this.sensY = 1
-                if (this.y + this.size / 2 >= boardHeigth) this.sensY = -1
+            checkIfWallHit: function () {
+                if (this.y - this.size / 2 <= 0) this.sensY = 1
+                // if (this.y + this.size / 2 >= boardHeigth) this.sensY = -1
                 if (this.x - this.size / 2 <= 0) this.sensX = 1
                 if (this.x + this.size / 2 >= boardWidth) this.sensX = -1
+            },
+            checkIfPaddleHit: function (x, y, width, height) {
+                // if (this.y - this.size / 2 <= 0 ) this.sensY = 1
+                if (this.y + this.size / 2 >= y && this.x >= x && this.x <= x + width) {
+                    this.sensY = -1
+                    return
+                }
+                if (this.x - this.size / 2 <= x + width && this.y >= y && this.y <= y + height) {
+                    this.sensX = 1
+                    return
+                }
+                if (this.x + this.size / 2 >= x && this.y >= y && this.y <= y + height) {
+                    this.sensX = -1
+                    return
+                }
             }
         }
         const Brick = {
@@ -88,8 +111,8 @@
                 fill(this.color[0], this.color[1], this.color[2])
                 rect(this.x, this.y, this.width, this.height)
             },
-            checkIfHit: function(ballX, ballY, ballRay) {
-                if (ballY - ballRay <= this.y + this.height && 
+            checkIfHit: function (ballX, ballY, ballRay) {
+                if (ballY - ballRay <= this.y + this.height &&
                     ballY + ballRay >= this.y &&
                     ballX + ballRay >= this.x &&
                     ballX - ballRay <= this.x + this.width
@@ -100,13 +123,19 @@
                 return false
             }
         }
+        const Paddle = {
+            width: 100,
+            height: 40,
+            color: "black",
+            x: 0,
+            y: boardHeigth - 50,
+            draw: function () {
+                this.x = mouseX - this.width / 2
 
-        let bricks = []
-        let balls = []
-
-        const numbersOfBricksByRow = 5
-        const numbersOfBricksByColumn = 3
-        const numberOfBalls = 1
+                fill(this.color)
+                rect(this.x, this.y, this.width, this.height)
+            }
+        }
 
         let time = new Date()
         setInterval(() => {
@@ -164,6 +193,8 @@
 
             showBricks()
             showBalls()
+
+            Paddle.draw()
 
             showHour()
 
@@ -228,10 +259,8 @@
             for (let ballIndex = 0; ballIndex < numberOfBalls; ballIndex++) {
                 const ball = Object.create(SmilefaceHead)
                 ball.init(
-                    Math.floor(Math.random() * 350), 
+                    Math.floor(Math.random() * 350),
                     Math.floor(Math.random() * 400),
-                    20,
-                    Math.floor(Math.random() * 50),
                 )
 
                 balls.push(ball)
