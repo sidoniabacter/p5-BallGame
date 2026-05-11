@@ -22,32 +22,55 @@
 
         const numbersOfBricksByRow = 5
         const numbersOfBricksByColumn = 3
-        const numberOfBalls = 2
+        const numberOfBalls = 5
+
+        function simulareExecutieCevaPeServer() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve()
+                }, 5000)
+            }).then(() => {
+            })
+        }
 
         const SmilefaceHead = {
-            x: 300,
-            y: 415,
+            x: 500,
+            y: 715,
             size: 35,
             color: "yellow",
             isMoving: true,
             setIntervalId: 0,
-            speed: 5,
+            changeColor: false,
+            speed: 15,
             sensX: 1,
             sensY: -1,
-            init: function (x, y, speed = 5, size = 35, color = "yellow") {
+            init: function (x, y, speed = 15, size = 35, color = "yellow") {
                 this.x = x
                 this.y = y
                 this.speed = speed
                 this.size = size
                 this.color = color
-                this.setIntervalId = setInterval(() => {
+                this.setSpeed()
+            },
+            setSpeed: function () {
+                this.resetSpeed()
+                this.setIntervalId = setInterval(async () => {
                     if (this.isMoving) {
                         this.checkIfWallHit()
                         this.checkIfPaddleHit(Paddle.x, Paddle.y, Paddle.width, Paddle.height)
+                        if (this.changeColor) {
+                            await simulareExecutieCevaPeServer()
+                            this.color = "blue"
+                        }
+                        
                         this.x = this.x + this.sensX
                         this.y = this.y + this.sensY
                     }
                 }, this.speed)
+            },
+            resetSpeed: function () {
+                if (this.setIntervalId != 0)
+                    clearInterval(this.setIntervalId)
             },
             draw: function () {
                 // HEAD
@@ -277,7 +300,9 @@
                 bricksRow.forEach(brick => {
                     balls.forEach(ball => {
                         if (brick.checkIfHit(ball.x, ball.y, ball.size / 2)) {
-                            ball.speed = ball.speed - 10
+                            if (ball.speed > 1)
+                                ball.speed = ball.speed - 1
+                            ball.setSpeed()
                         }
                     })
                     if (brick.display) {
@@ -294,9 +319,11 @@
             for (let ballIndex = 0; ballIndex < numberOfBalls; ballIndex++) {
                 const ball = Object.create(SmilefaceHead)
                 ball.init(
-                    Math.floor(Math.random() * 350),
-                    Math.floor(Math.random() * 400),
+                    Math.floor(Math.random() * boardWidth),
+                    500,
                 )
+                if (ballIndex == 0)
+                    ball.changeColor = true
 
                 balls.push(ball)
             }
