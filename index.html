@@ -61,10 +61,12 @@
                         if (this.changeColor) {
                             await simulareExecutieCevaPeServer()
                             this.color = "blue"
+                            this.changeColor = false
+                        } else {
+                            this.x = this.x + this.sensX
+                            this.y = this.y + this.sensY
                         }
-                        
-                        this.x = this.x + this.sensX
-                        this.y = this.y + this.sensY
+
                     }
                 }, this.speed)
             },
