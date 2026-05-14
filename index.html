@@ -8,8 +8,12 @@
 </head>
 
 <body>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
-    <script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script> -->
+
+    <script type="module">
+        import * as p5 from "./node_modules/p5/lib/p5.js"
+        import { SmilefaceHead } from "./ball.js"
+
         const boardWidth = 800
         const boardHeigth = 600
 
@@ -33,99 +37,6 @@
             })
         }
 
-        const SmilefaceHead = {
-            x: 500,
-            y: 715,
-            size: 35,
-            color: "yellow",
-            isMoving: true,
-            setIntervalId: 0,
-            changeColor: false,
-            speed: 15,
-            sensX: 1,
-            sensY: -1,
-            init: function (x, y, speed = 15, size = 35, color = "yellow") {
-                this.x = x
-                this.y = y
-                this.speed = speed
-                this.size = size
-                this.color = color
-                this.setSpeed()
-            },
-            setSpeed: function () {
-                this.resetSpeed()
-                this.setIntervalId = setInterval(async () => {
-                    if (this.isMoving) {
-                        this.checkIfWallHit()
-                        this.checkIfPaddleHit(Paddle.x, Paddle.y, Paddle.width, Paddle.height)
-                        if (this.changeColor) {
-                            await simulareExecutieCevaPeServer()
-                            this.color = "blue"
-                            this.changeColor = false
-                        } else {
-                            this.x = this.x + this.sensX
-                            this.y = this.y + this.sensY
-                        }
-
-                    }
-                }, this.speed)
-            },
-            resetSpeed: function () {
-                if (this.setIntervalId != 0)
-                    clearInterval(this.setIntervalId)
-            },
-            draw: function () {
-                // HEAD
-                fill(this.color)
-                circle(this.x, this.y, this.size)
-
-                // LEFT EYE
-                circle(this.x - this.size / 5, this.y - this.size / 5, this.size / 5)
-                fill("blue")
-                circle(this.x - this.size / 5, this.y - this.size / 5, this.size / 10)
-                fill(this.color)
-
-                // RIGHT EYE
-                circle(this.x + this.size / 5, this.y - this.size / 5, this.size / 5)
-                fill("blue")
-                circle(this.x + this.size / 5, this.y - this.size / 5, this.size / 10)
-                fill(this.color)
-
-                // NOSE
-                fill("orange")
-                triangle(this.x, this.y, this.x - this.size / 12.5, this.y + this.size / 12.5, this.x + this.size / 12.5, this.y + this.size / 12.5)
-
-                // MOUTH
-                fill("red")
-                arc(this.x, this.y + this.size / 5, this.size / 2.5, this.size / 3.6, 0, PI)
-                fill(this.color)
-            },
-            checkIfWallHit: function () {
-                if (this.y - this.size / 2 <= 0) this.sensY = 1
-                if (this.y + this.size / 2 >= boardHeigth) {
-                    this.isMoving = false
-                    if (!balls.some(ball => ball.isMoving))
-                        gamePromiseReject("You Lost!")
-                }
-                if (this.x - this.size / 2 <= 0) this.sensX = 1
-                if (this.x + this.size / 2 >= boardWidth) this.sensX = -1
-            },
-            checkIfPaddleHit: function (x, y, width, height) {
-                // if (this.y - this.size / 2 <= 0 ) this.sensY = 1
-                if (this.y + this.size / 2 >= y && this.x >= x && this.x <= x + width) {
-                    this.sensY = -1
-                    return
-                }
-                // if (this.x - this.size / 2 <= x + width && this.y >= y && this.y <= y + height) {
-                //     this.sensX = 1
-                //     return
-                // }
-                // if (this.x + this.size / 2 >= x && this.y >= y && this.y <= y + height) {
-                //     this.sensX = -1
-                //     return
-                // }
-            }
-        }
         const Brick = {
             x: 0,
             y: 0,
@@ -215,47 +126,38 @@
         // const stopButton = Object.create(Button)
         // stopButton.init(600, 400, 70, 30, "red", "STOP")
 
-        function setup() {
-            createCanvas(boardWidth, boardHeigth)
+        const contextP5 = (p5) => {
+            p5.setup = () => {
+                createCanvas(boardWidth, boardHeigth)
+                initBricks()
+                initBalls()
 
-            initBricks()
-            initBalls()
-
-            new Promise((resolve, reject) => {
-                gamePromiseResolve = resolve
-                gamePromiseReject = reject
-            })
-                .then((message) => {
-                    console.log(message)
-                    balls.forEach(ball => ball.isMoving = false)
-                    gameOver = message
+                simulareExecutieCevaPeServer().then(() => {
+                    gamePromiseResolve("You Win!")
                 })
-                .catch((message) => {
-                    gameOver = message
-                })
-
-        }
-
-        function draw() {
-            background("white")
-
-            showBricks()
-            showBalls()
-
-            Paddle.draw()
-
-            showHour()
-
-            if (gameOver.length >= 0) {
-                fill("black")
-                textSize(40)
-                text(gameOver, 400, 400)
-                textSize(12)
             }
+            p5.draw = () => {
+                background("white")
 
-            // startButton.draw()
-            // stopButton.draw()
+                showBricks()
+                showBalls()
+
+                Paddle.draw()
+
+                showHour()
+
+                if (gameOver.length >= 0) {
+                    fill("black")
+                    textSize(40)
+                    text(gameOver, 400, 400)
+                    textSize(12)
+                }
+
+                // startButton.draw()
+                // stopButton.draw()
+            }
         }
+        const BallGameP5 = new P5(contextP5)
 
         function mousePressed() {
             // startButton.checkIfClicked(() => {

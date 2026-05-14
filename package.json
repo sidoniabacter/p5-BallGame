@@ -1,0 +1,10 @@
+{
+  "name": "ball-game-in-p5",
+  "description": "Ball Game in P5",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "p5": "^1.11.11"
+  }
+}
