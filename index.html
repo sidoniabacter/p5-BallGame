@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 
@@ -250,3 +251,383 @@
 </body>
 
 </html>
+=======
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
+    <script>
+      const boardWidth = 800;
+      const boardHeigth = 600;
+
+      let bricks = [];
+      let balls = [];
+
+      let gamePromiseResolve = null;
+      let gamePromiseReject = null;
+      let gameOver = "";
+
+      const numbersOfBricksByRow = 5;
+      const numbersOfBricksByColumn = 3;
+      const numberOfBalls = 5;
+
+      function simulareExecutieCevaPeServer() {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, 5000);
+        }).then(() => {});
+      }
+
+      const SmilefaceHead = {
+        x: 500,
+        y: 715,
+        size: 35,
+        color: "yellow",
+        isMoving: true,
+        setIntervalId: 0,
+        changeColor: false,
+        speed: 15,
+        sensX: 1,
+        sensY: -1,
+        init: function (x, y, speed = 15, size = 35, color = "yellow") {
+          this.x = x;
+          this.y = y;
+          this.speed = speed;
+          this.size = size;
+          this.color = color;
+          this.setSpeed();
+        },
+        setSpeed: function () {
+          this.resetSpeed();
+          this.setIntervalId = setInterval(async () => {
+            if (this.isMoving) {
+              this.checkIfWallHit();
+              this.checkIfPaddleHit(
+                Paddle.x,
+                Paddle.y,
+                Paddle.width,
+                Paddle.height,
+              );
+              if (this.changeColor) {
+                await simulareExecutieCevaPeServer();
+                this.color = "blue";
+                this.changeColor = false;
+              } else {
+                this.x = this.x + this.sensX;
+                this.y = this.y + this.sensY;
+              }
+            }
+          }, this.speed);
+        },
+        resetSpeed: function () {
+          if (this.setIntervalId != 0) clearInterval(this.setIntervalId);
+        },
+        draw: function () {
+          // HEAD
+          fill(this.color);
+          circle(this.x, this.y, this.size);
+
+          // LEFT EYE
+          circle(this.x - this.size / 5, this.y - this.size / 5, this.size / 5);
+          fill("blue");
+          circle(
+            this.x - this.size / 5,
+            this.y - this.size / 5,
+            this.size / 10,
+          );
+          fill(this.color);
+
+          // RIGHT EYE
+          circle(this.x + this.size / 5, this.y - this.size / 5, this.size / 5);
+          fill("blue");
+          circle(
+            this.x + this.size / 5,
+            this.y - this.size / 5,
+            this.size / 10,
+          );
+          fill(this.color);
+
+          // NOSE
+          fill("orange");
+          triangle(
+            this.x,
+            this.y,
+            this.x - this.size / 12.5,
+            this.y + this.size / 12.5,
+            this.x + this.size / 12.5,
+            this.y + this.size / 12.5,
+          );
+
+          // MOUTH
+          fill("red");
+          arc(
+            this.x,
+            this.y + this.size / 5,
+            this.size / 2.5,
+            this.size / 3.6,
+            0,
+            PI,
+          );
+          fill(this.color);
+        },
+        checkIfWallHit: function () {
+          if (this.y - this.size / 2 <= 0) this.sensY = 1;
+          if (this.y + this.size / 2 >= boardHeigth) {
+            this.isMoving = false;
+            if (!balls.some((ball) => ball.isMoving))
+              gamePromiseReject("You Lost!");
+          }
+          if (this.x - this.size / 2 <= 0) this.sensX = 1;
+          if (this.x + this.size / 2 >= boardWidth) this.sensX = -1;
+        },
+        checkIfPaddleHit: function (x, y, width, height) {
+          // if (this.y - this.size / 2 <= 0 ) this.sensY = 1
+          if (
+            this.y + this.size / 2 >= y &&
+            this.x >= x &&
+            this.x <= x + width
+          ) {
+            this.sensY = -1;
+            return;
+          }
+          // if (this.x - this.size / 2 <= x + width && this.y >= y && this.y <= y + height) {
+          //     this.sensX = 1
+          //     return
+          // }
+          // if (this.x + this.size / 2 >= x && this.y >= y && this.y <= y + height) {
+          //     this.sensX = -1
+          //     return
+          // }
+        },
+      };
+      const Brick = {
+        x: 0,
+        y: 0,
+        color: [0, 0, 0],
+        height: 0,
+        width: 0,
+        display: true,
+        init: function (x, y, color, height, width) {
+          this.x = x;
+          this.y = y;
+          this.color = color;
+          this.height = height;
+          this.width = width;
+        },
+        draw: function () {
+          fill(this.color[0], this.color[1], this.color[2]);
+          rect(this.x, this.y, this.width, this.height);
+        },
+        checkIfHit: function (ballX, ballY, ballRay) {
+          if (
+            this.display &&
+            ballY - ballRay <= this.y + this.height &&
+            ballY + ballRay >= this.y &&
+            ballX + ballRay >= this.x &&
+            ballX - ballRay <= this.x + this.width
+          ) {
+            this.display = false;
+            return true;
+          }
+          return false;
+        },
+      };
+      const Paddle = {
+        width: 100,
+        height: 40,
+        color: "black",
+        x: 0,
+        y: boardHeigth - 50,
+        draw: function () {
+          this.x = mouseX - this.width / 2;
+
+          fill(this.color);
+          rect(this.x, this.y, this.width, this.height);
+        },
+      };
+
+      let time = new Date();
+      setInterval(() => {
+        time = new Date();
+      }, 1000);
+
+      const Button = {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        color: "red",
+        text: "button",
+        textColor: "white",
+        textPadding: 20,
+        init: function (x, y, width, height, color, text) {
+          this.x = x;
+          this.y = y;
+          this.width = width;
+          this.height = height;
+          this.color = color;
+          this.text = text;
+        },
+        draw: function () {
+          fill(this.color);
+          rect(this.x, this.y, this.width, this.height);
+
+          fill(this.textColor);
+          text(this.text, this.x + this.textPadding, this.y + this.textPadding);
+        },
+        checkIfClicked: function (callback) {
+          if (
+            mouseX >= this.x &&
+            mouseX <= this.x + this.width &&
+            mouseY >= this.y &&
+            mouseY <= this.y + this.height
+          ) {
+            callback();
+          }
+        },
+      };
+
+      // const startButton = Object.create(Button)
+      // startButton.init(200, 400, 80, 30, "green", "START")
+
+      // const stopButton = Object.create(Button)
+      // stopButton.init(600, 400, 70, 30, "red", "STOP")
+
+      function setup() {
+        createCanvas(boardWidth, boardHeigth);
+
+        initBricks();
+        initBalls();
+
+        new Promise((resolve, reject) => {
+          gamePromiseResolve = resolve;
+          gamePromiseReject = reject;
+        })
+          .then((message) => {
+            console.log(message);
+            balls.forEach((ball) => (ball.isMoving = false));
+            gameOver = message;
+          })
+          .catch((message) => {
+            gameOver = message;
+          });
+      }
+
+      function draw() {
+        background("white");
+
+        showBricks();
+        showBalls();
+
+        Paddle.draw();
+
+        showHour();
+
+        if (gameOver.length >= 0) {
+          fill("black");
+          textSize(40);
+          text(gameOver, 400, 400);
+          textSize(12);
+        }
+
+        // startButton.draw()
+        // stopButton.draw()
+      }
+
+      function mousePressed() {
+        // startButton.checkIfClicked(() => {
+        //    smilefaceHead.init()
+        //    smilefaceHead.isMoving = true
+        //    smilefaceHead.timeOutId = setTimeout(() => {
+        //     smilefaceHead.isMoving = false
+        //    }, 4700)
+        // })
+        // stopButton.checkIfClicked(() => {
+        //     smilefaceHead.isMoving = false
+        // })
+      }
+
+      function initBricks() {
+        const marignLR = 800 / 20;
+        const paddingBetweenCols = 800 / 30;
+        const brickWidth =
+          (800 -
+            2 * marignLR -
+            (numbersOfBricksByRow - 1) * paddingBetweenCols) /
+          numbersOfBricksByRow;
+        const marignTop = 80;
+        const paddingBetweenRows = 40;
+        for (let rowIndex = 0; rowIndex < numbersOfBricksByColumn; rowIndex++) {
+          bricks.push([]);
+          for (let colIndex = 0; colIndex < numbersOfBricksByRow; colIndex++) {
+            const brick = Object.create(Brick);
+            brick.init(
+              marignLR + colIndex * (brickWidth + paddingBetweenCols),
+              marignTop + rowIndex * paddingBetweenRows,
+              [
+                Math.floor(Math.random() * 256),
+                Math.floor(Math.random() * 256),
+                Math.floor(Math.random() * 256),
+              ],
+              30,
+              brickWidth,
+            );
+            bricks[rowIndex].push(brick);
+          }
+        }
+        console.log("bricks", bricks);
+      }
+
+      function showBricks() {
+        let allGone = true;
+        bricks.forEach((bricksRow) => {
+          bricksRow.forEach((brick) => {
+            balls.forEach((ball) => {
+              if (brick.checkIfHit(ball.x, ball.y, ball.size / 2)) {
+                if (ball.speed > 1) ball.speed = ball.speed - 1;
+                ball.setSpeed();
+              }
+            });
+            if (brick.display) {
+              allGone = false;
+              brick.draw();
+            }
+          });
+        });
+        console.log(allGone);
+        if (allGone) gamePromiseResolve("You Win!");
+      }
+
+      function initBalls() {
+        for (let ballIndex = 0; ballIndex < numberOfBalls; ballIndex++) {
+          const ball = Object.create(SmilefaceHead);
+          ball.init(Math.floor(Math.random() * boardWidth), 500);
+          if (ballIndex == 0) ball.changeColor = true;
+
+          balls.push(ball);
+        }
+      }
+
+      function showBalls() {
+        balls.forEach((ball) => {
+          ball.draw();
+        });
+      }
+
+      function showHour() {
+        //const formatTime = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
+        const formatTime = `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+        fill("black");
+        text(formatTime, 20, 20);
+      }
+    </script>
+  </body>
+</html>
+>>>>>>> d0ff1c9ee2d36fa3d75d455c8280b4eea42d70a1
