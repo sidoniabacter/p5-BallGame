@@ -1,3 +1,12 @@
+import {
+  balls,
+  Paddle,
+  boardWidth,
+  boardHeigth,
+  simulareExecutieCevaPeServer,
+  onLose,
+} from "./config.js";
+
 export const SmilefaceHead = {
   x: 500,
   y: 715,
@@ -81,7 +90,7 @@ export const SmilefaceHead = {
     if (this.y - this.size / 2 <= 0) this.sensY = 1;
     if (this.y + this.size / 2 >= boardHeigth) {
       this.isMoving = false;
-      if (!balls.some((ball) => ball.isMoving)) gamePromiseReject("You Lost!");
+      if (!balls.some((ball) => ball.isMoving)) onLose();
     }
     if (this.x - this.size / 2 <= 0) this.sensX = 1;
     if (this.x + this.size / 2 >= boardWidth) this.sensX = -1;
