@@ -1,20 +1,7 @@
+import { balls } from "./ball.js";
+
 export const boardWidth = 800;
 export const boardHeigth = 600;
-
-export const balls = [];
-
-export const Paddle = {
-  width: 100,
-  height: 40,
-  color: "black",
-  x: 0,
-  y: boardHeigth - 50,
-  draw: function () {
-    this.x = mouseX - this.width / 2;
-    fill(this.color);
-    rect(this.x, this.y, this.width, this.height);
-  },
-};
 
 let gameMessage = "";
 
@@ -23,10 +10,11 @@ export function getGameMessage() {
 }
 
 export function onWin() {
+  gameMessage = "You Win!";
+
   balls.forEach((ball) => {
     ball.isMoving = false;
   });
-  gameMessage = "You Win!";
 }
 
 export function onLose() {

@@ -1,11 +1,14 @@
 import {
-  balls,
-  Paddle,
   boardWidth,
   boardHeigth,
   simulareExecutieCevaPeServer,
   onLose,
 } from "./config.js";
+
+import { Paddle } from "./paddle.js";
+
+export const balls = [];
+const numberOfBalls = 5;
 
 export const SmilefaceHead = {
   x: 500,
@@ -111,3 +114,19 @@ export const SmilefaceHead = {
     // }
   },
 };
+
+export function initBalls() {
+  for (let ballIndex = 0; ballIndex < numberOfBalls; ballIndex++) {
+    const ball = Object.create(SmilefaceHead);
+    ball.init(Math.floor(Math.random() * boardWidth), 500);
+    if (ballIndex == 0) ball.changeColor = true;
+
+    balls.push(ball);
+  }
+}
+
+export function showBalls() {
+  balls.forEach((ball) => {
+    ball.draw();
+  });
+}
